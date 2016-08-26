@@ -54,14 +54,13 @@ end
 
 ..(x, y) = ClosedInterval(x, y)
 ±(x, y) = ClosedInterval(x + y, x - y)
-
-function ±(x::CartesianIndex, y)
-    ClosedInterval(x + y, x - y)
-end
+±(x::CartesianIndex, y) = map(ClosedInterval, (x + y).I, (x - y).I)
 
 linearindexing(A::IntegralArray) = Base.LinearFast()
 size(A::IntegralArray) = size(A.data)
 getindex(A::IntegralArray, i::Int...) = A.data[i...]
+
+getindex(A::IntegralArray, ids::Tuple...) = getindex(A, ids[1]...)
 
 function getindex(A::IntegralArray, i::ClosedInterval...)
     _boxdiff(A, left(i[1]), left(i[2]), right(i[1]), right(i[2]))
