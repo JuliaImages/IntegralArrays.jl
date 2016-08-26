@@ -39,7 +39,7 @@ of the window. Given an integral array -
 The sum of pixels in the area denoted by * is given by S = D + A - B - C.
 """
 immutable IntegralArray{T, N, A} <: AbstractArray{T, N}
-	data::A
+    data::A
 end
 
 function IntegralArray(array::AbstractArray)
@@ -56,7 +56,7 @@ end
 ±(x, y) = ClosedInterval(x + y, x - y)
 
 function ±(x::CartesianIndex, y)
-	ClosedInterval(x + y, x - y)
+    ClosedInterval(x + y, x - y)
 end
 
 linearindexing(A::IntegralArray) = Base.LinearFast()
@@ -64,7 +64,7 @@ size(A::IntegralArray) = size(A.data)
 getindex(A::IntegralArray, i::Int...) = A.data[i...]
 
 function getindex(A::IntegralArray, i::ClosedInterval...)
-	_boxdiff(A, left(i[1]), left(i[2]), right(i[1]), right(i[2]))
+    _boxdiff(A, left(i[1]), left(i[2]), right(i[1]), right(i[2]))
 end
 
 function _boxdiff{T}(int_array::IntegralArray{T, 2}, tl_y::Integer, tl_x::Integer, br_y::Integer, br_x::Integer)
