@@ -1,11 +1,11 @@
 module IntegralArrays
 
 # package code goes here
-using Images, ClosedIntervals
+using Images, IntervalSets
 
 import Base: size, getindex, linearindexing
 
-export IntegralArray, ±, ..
+export IntegralArray
 
 """
 ```
@@ -52,10 +52,6 @@ function IntegralArray(array::AbstractArray)
     IntegralArray{eltype(array), ndims(array), typeof(array)}(integral_array)
 end
 
-..(x, y) = ClosedInterval(x, y)
-±(x, y) = ClosedInterval(x + y, x - y)
-±(x::CartesianIndex, y) = map(ClosedInterval, (x + y).I, (x - y).I)
-
 linearindexing(A::IntegralArray) = Base.LinearFast()
 size(A::IntegralArray) = size(A.data)
 getindex(A::IntegralArray, i::Int...) = A.data[i...]
@@ -63,7 +59,7 @@ getindex(A::IntegralArray, i::Int...) = A.data[i...]
 getindex(A::IntegralArray, ids::Tuple...) = getindex(A, ids[1]...)
 
 function getindex(A::IntegralArray, i::ClosedInterval...)
-    _boxdiff(A, left(i[1]), left(i[2]), right(i[1]), right(i[2]))
+    _boxdiff(A, i[1].left, i[2].left, i[1].right, i[2].right)
 end
 
 function _boxdiff{T}(int_array::IntegralArray{T, 2}, tl_y::Integer, tl_x::Integer, br_y::Integer, br_x::Integer)
