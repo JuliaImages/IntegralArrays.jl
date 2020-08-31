@@ -1,13 +1,6 @@
-module IntegralArrays
-
-using FileIO # for loading images
-using QuartzImageIO, ImageMagick, ImageSegmentation, ImageFeatures # for reading images
-using Colors # for making images greyscale
-using Images # for channelview; converting images to matrices
-using ImageTransformations # for scaling high-quality images down
-
 #=
-Any one pixel in a given image has the value that is the sum of all of the pixels above it and to the left.
+Rectangle features can be computed very rapidly using an intermediate representation for the image, which we call the integral image.
+The integral image at location $x,y$ contains the sum of the pixels above and to the left of $x,y$ inclusive.
 Original    Integral
 +--------   +------------
 | 1 2 3 .   | 1  3  6 .
@@ -15,60 +8,66 @@ Original    Integral
 | . . . .   | . . . . .
 =#
 
-function getImageMatrix(imageFile::AbstractString)
-    img = load(imageFile)
-    #img = imresize(img, ratio=1/8)
+module IntegralImage
 
-    # imgArr = convert(Array{Float64}, channelview(img)) # for coloured images
-    imgArr = convert(Array{Float64}, Colors.Gray.(img))
-    
-    return imgArr
+import Base: size, getindex, LinearIndices
+using Images: Images, coords_spatial
+
+
+export to_int_img, sum_region
+
+
+struct IntegralArray{T, N, A} <: AbstractArray{T, N}
+	data::A
 end
 
-function toIntegralImage(imgArr::AbstractArray)
+
+function to_int_img(img_arr::AbstractArray)
+	#=
+    Calculates the integral image based on this instance's original image data.
     
-    arrRows, arrCols = size(imgArr) # get size only once in case
-    rowSum = zeros(arrRows, arrCols)
-    integralImageArr = zeros(arrRows, arrCols)
+    parameter `imgArr`: Image source data [type: Abstract Array]
     
-    # process the first column
-    for x in 1:(arrRows)
-        # we cannot access an element that does not exist if we are in the
-        # top left corner of the image matrix
-        if isone(x)
-            integralImageArr[x, 1] = imgArr[x, 1]
-        else
-            integralImageArr[x, 1] = integralImageArr[x-1, 1] + imgArr[x, 1]
-        end
+    return `integralImageArr`: Integral image for given image [type: Abstract Array]
+    
+    https://www.ipol.im/pub/art/2014/57/article_lr.pdf, p. 346
+    
+    This function is adapted from https://github.com/JuliaImages/IntegralArrays.jl/blob/a2aa5bb7c2d26512f562ab98f43497d695b84701/src/IntegralArrays.jl
+    =#
+	
+	array_size = size(img_arr)
+    int_img_arr = Array{Images.accum(eltype(img_arr))}(undef, array_size)
+    sd = coords_spatial(img_arr)
+    cumsum!(int_img_arr, img_arr; dims=sd[1])
+    for i = 2:length(sd)
+        cumsum!(int_img_arr, int_img_arr; dims=sd[i])
     end
-    
-    # start processing columns
-    for y in 1:(arrCols)
-        # same as above: we cannot access a 0th element in the matrix
-        # our scalar accumulator s will catch the 1st row, so we only
-        # needed to predefine the first column before this loop
-        if isone(y)
-            continue
-        end
-        
-        # get initial row
-        s = imgArr[1, y] # scalar accumulator
-        integralImageArr[1, y] = integralImageArr[1, y-1] + s
-        
-        # now start processing everything else
-        for x in 1:(arrRows)
-            if isone(x)
-                continue
-            end
-            s = s + imgArr[x, y]
-            integralImageArr[x, y] = integralImageArr[x, y-1] + s
-        end
-    end
-    
-    return integralImageArr
+	
+    return Array{eltype(img_arr), ndims(img_arr)}(int_img_arr)
 end
 
-export getImageMatrix
-export toIntegralImage
+LinearIndices(A::IntegralArray) = Base.LinearFast()
+size(A::IntegralArray) = size(A.data)
+getindex(A::IntegralArray, i::Int...) = A.data[i...]
+getindex(A::IntegralArray, ids::Tuple...) = getindex(A, ids[1]...)
 
-end # module
+
+function sum_region(ii_arr::AbstractArray, top_left::Tuple{Int64,Int64}, bot_right::Tuple{Int64,Int64})
+    #=
+    parameter `integralImageArr`: The intermediate Integral Image [type: Abstract Array]
+    Calculates the sum in the rectangle specified by the given tuples:
+        parameter `topLeft`: (x,y) of the rectangle's top left corner [type: Tuple]
+        parameter `bottomRight`: (x,y) of the rectangle's bottom right corner [type: Tuple]
+    
+    return: The sum of all pixels in the given rectangle defined by the parameters topLeft and bottomRight
+    =#
+	
+	sum = ii_arr[bot_right[2], bot_right[1]]
+    sum -= top_left[1] > 1 ? ii_arr[bot_right[2], top_left[1] - 1] : 0
+    sum -= top_left[2] > 1 ? ii_arr[top_left[2] - 1, bot_right[1]] : 0
+    sum += top_left[2] > 1 && top_left[1] > 1 ? ii_arr[top_left[2] - 1, top_left[1] - 1] : 0
+	
+    return sum
+end
+
+end # end module
