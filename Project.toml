@@ -1,0 +1,19 @@
+name = "IntegralArrays"
+uuid = "1d092043-8f09-5a30-832f-7509e371ab51"
+version = "0.1.0"
+
+[deps]
+IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+
+[compat]
+IntervalSets = "0.5"
+julia = "1"
+
+[extras]
+ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["ColorTypes", "ColorVectorSpace", "LinearAlgebra", "Test"]
