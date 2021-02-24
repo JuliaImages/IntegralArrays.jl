@@ -18,7 +18,6 @@ calculation of sum of pixels in a rectangular subset of an array.
 ```
 sum = integral_array[ytop..ybot, xtop..xbot]
 sum = integral_array[y ± σy, x ± σx]
-sum = integral_array[CartesianIndex(y, x) ± σ]
 ```
 
 The sum of a window in an array can be directly calculated using four array references of
