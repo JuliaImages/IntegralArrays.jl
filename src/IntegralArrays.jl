@@ -111,4 +111,8 @@ end
     return _getindex(val, A, axtail, -s, (iint..., imin), ivtail)
 end
 
+Base.@propagate_inbounds function Base.getindex(A::IntegralArray{T,N}, r::ClosedInterval{CartesianIndex{N}}) where {T,N}
+    A[map(.., r.left.I, r.right.I)...]
+end
+
 end # module

@@ -47,6 +47,9 @@ using ColorTypes.FixedPointNumbers
     @test int_sum == 1400
     int_sum = int_array[6 ± 2, 6 ± 2]
     @test int_sum == 1400
+
+    I, Δ = CartesianIndex(6, 6), CartesianIndex(2, 2)
+    @test int_array[I-Δ..I+Δ] == 1400
 end
 
 @testset "Color integral arrays" begin
