@@ -1,6 +1,6 @@
 name = "IntegralArrays"
 uuid = "1d092043-8f09-5a30-832f-7509e371ab51"
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
