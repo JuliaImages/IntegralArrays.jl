@@ -1,7 +1,15 @@
-using IntegralArrays, LinearAlgebra, Test, IntervalSets
+using IntegralArrays, LinearAlgebra, IntervalSets
 using ColorTypes, ColorVectorSpace
 using ColorTypes.FixedPointNumbers
 using OffsetArrays
+using Test
+using Documenter
+
+@testset "meta-quality" begin
+    if VERSION >= v"1.6"
+        doctest(IntegralArrays; manual = false)
+    end
+end
 
 @testset "IntegralArrays" begin
     a = zeros(10, 10)
