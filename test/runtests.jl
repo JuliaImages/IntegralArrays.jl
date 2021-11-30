@@ -1,6 +1,7 @@
 using IntegralArrays, LinearAlgebra, Test, IntervalSets
 using ColorTypes, ColorVectorSpace
 using ColorTypes.FixedPointNumbers
+using OffsetArrays
 
 @testset "IntegralArrays" begin
     a = zeros(10, 10)
@@ -50,15 +51,34 @@ using ColorTypes.FixedPointNumbers
 
     I, Δ = CartesianIndex(6, 6), CartesianIndex(2, 2)
     @test int_array[I-Δ..I+Δ] == 1400
+
+    @testset "OffsetArray" begin
+        X = rand(1:5, 5, 5)
+        iX = IntegralArray(X)
+        @test axes(iX) == (1:5, 1:5)
+        Xo = OffsetArray(X, -1, -1)
+        iXo = IntegralArray(Xo)
+        @test axes(iXo) == (0:4, 0:4)
+
+        @test_throws DimensionMismatch IntegralArray(X, Xo)
+    end
+
+    @testset "in-place with buffer" begin
+        X = collect(reshape(1:25, 5, 5))
+        iX = similar(X)
+        IntegralArray(iX, X)
+        IntegralArray(X, X)
+        @test iX == X == IntegralArray(reshape(1:25, 5, 5))
+    end
 end
 
 @testset "Color integral arrays" begin
     A = [RGB{N0f8}(0.2, 0.8, 0), RGB{N0f8}(0.5, 0.3, 0)]
     intA = IntegralArray(A)
     a1, a2 = A
-    @test intA[2] == RGB(Float64(red(a1))+Float64(red(a2)),
-                         Float64(green(a1))+Float64(green(a2)),
-                         Float64(blue(a1))+Float64(blue(a2)))
+    @test intA[2] == RGB(Float32(red(a1))+Float32(red(a2)),
+                         Float32(green(a1))+Float32(green(a2)),
+                         Float32(blue(a1))+Float32(blue(a2)))
     @test intA[1..2] == intA[2]
     @test intA[2..2] ≈ A[2]
 end
