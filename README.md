@@ -63,9 +63,7 @@ X = Float32.(rand(1:5, 64, 64));
 m1 = copy(X);
 m2 = copy(X);
 
-@btime mean_filter_naive!(\$m1, \$X); # 65.078 μs (0 allocations: 0 bytes)
-@btime mean_filter_integral!(\$m2, \$X); # 12.161 μs (4 allocations: 16.17 KiB)
+@btime mean_filter_naive!($m1, $X); # 65.078 μs (0 allocations: 0 bytes)
+@btime mean_filter_integral!($m2, $X); # 12.161 μs (4 allocations: 16.17 KiB)
 m1 == m2 # true
 ```
-
-"""
