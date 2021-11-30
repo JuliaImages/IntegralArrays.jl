@@ -3,7 +3,8 @@ module IntegralArrays
 # package code goes here
 using IntervalSets
 
-export IntegralArray
+const .. = IntervalSets.:(..)
+export IntegralArray, ..
 
 """
 ```
