@@ -35,7 +35,7 @@ julia> iA = IntegralArray(A)
  10  40   90  160  250
  15  55  120  210  325
 
-julia> iA[3] == sum(A[1:3, 1:3])
+julia> iA[3, 3] == sum(A[1:3, 1:3])
 true
 
 julia> iA[3..5, 3..5] == sum(A[3:5, 3:5])
