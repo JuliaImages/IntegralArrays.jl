@@ -2,22 +2,25 @@ module IntegralArrays
 
 # package code goes here
 using IntervalSets
+using FixedPointNumbers: FixedPoint, floattype
+using ColorTypes: Colorant
 
 const .. = IntervalSets.:(..)
 export IntegralArray, ..
 
 """
-    iA = IntegralArray(A)
+    iA = IntegralArray([buffer,] A)
 
-Construct the integral array of the input array `A`.
+Construct the integral array of the input array `A`. If buffer of the same shape as `A`
+is provided, then this is a non-allocating version.
 
 The integral array is calculated by assigning to each cell the sum of all cells above it and
 to its left, i.e. the rectangle from origin point to the pixel position. For example, in 1-D
 case, `iA[i] = sum(A[1:i])` if the vector `A`'s origin is 1.
 
 ```jldoctest; setup=:(using IntegralArrays)
-julia> A = reshape(1:25, 5, 5)
-5×5 reshape(::UnitRange{$Int}, 5, 5) with eltype $Int:
+julia> A = collect(reshape(1:25, 5, 5))
+5×5 $(Matrix{Int}):
  1   6  11  16  21
  2   7  12  17  22
  3   8  13  18  23
@@ -37,6 +40,16 @@ true
 
 julia> iA[3..5, 3..5] == sum(A[3:5, 3:5])
 true
+
+julia> IntegralArray(A, A); # in-place modifying A itself
+
+julia> A
+5×5 $(Matrix{Int}):
+  1   7   18   34   55
+  3  16   39   72  115
+  6  27   63  114  180
+ 10  40   90  160  250
+ 15  55  120  210  325
 ```
 
 The closed interval `a..b` is used to support the integral array `iX` with a different
@@ -81,12 +94,14 @@ struct IntegralArray{T, N, A} <: AbstractArray{T, N}
     data::A
 end
 
-function IntegralArray(array::AbstractArray)
-    integral_array = cumsum(array; dims=1)
-    for i = 2:ndims(array)
-        cumsum!(integral_array, integral_array; dims=i)
+IntegralArray(A::AbstractArray) = IntegralArray(similar(A, _maybe_floattype(eltype(A))), A)
+function IntegralArray(data::AbstractArray, A::AbstractArray)
+    axes(data) == axes(A) || throw(DimensionMismatch("integral data axes $(axes(data)) should be equal original array axes $(axes(A))."))
+    cumsum!(data, A; dims=1)
+    for i = 2:ndims(A)
+        cumsum!(data, data; dims=i)
     end
-    IntegralArray{eltype(array), ndims(array), typeof(integral_array)}(integral_array)
+    IntegralArray{eltype(data), ndims(data), typeof(data)}(data)
 end
 
 Base.IndexStyle(::Type{IntegralArray{T,N,A}}) where {T,N,A} = IndexStyle(A)
@@ -115,5 +130,12 @@ end
 Base.@propagate_inbounds function Base.getindex(A::IntegralArray{T,N}, r::ClosedInterval{CartesianIndex{N}}) where {T,N}
     A[map(.., r.left.I, r.right.I)...]
 end
+
+
+# only promote FixedPointNumber types(e.g., `N0f8`) to floats
+# keeps consistant result for `Int` to Base
+_maybe_floattype(::Type{CT}) where CT<:Colorant = floattype(CT)
+_maybe_floattype(::Type{T}) where T<:FixedPoint = floattype(T)
+_maybe_floattype(::Type{T}) where T = T
 
 end # module
