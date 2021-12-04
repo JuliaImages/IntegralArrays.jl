@@ -8,6 +8,8 @@ FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 
 [compat]
+ColorTypes = "0.9, 0.10, 0.11"
+FixedPointNumbers = "0.7, 0.8"
 IntervalSets = "0.5"
 julia = "1"
 
