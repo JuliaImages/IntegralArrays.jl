@@ -1,6 +1,5 @@
 module IntegralArrays
 
-# package code goes here
 using IntervalSets
 using FixedPointNumbers: FixedPoint, floattype
 using ColorTypes: Colorant
@@ -94,14 +93,28 @@ struct IntegralArray{T, N, A} <: AbstractArray{T, N}
     data::A
 end
 
-IntegralArray(A::AbstractArray) = IntegralArray(similar(A, _maybe_floattype(eltype(A))), A)
-function IntegralArray(data::AbstractArray, A::AbstractArray)
+IntegralArray{T}(A::AbstractArray) where {T} = IntegralArray{T}(similar(A, _maybe_floattype(T)), A)
+function IntegralArray{T}(data::AbstractArray, A::AbstractArray) where {T}
     axes(data) == axes(A) || throw(DimensionMismatch("integral data axes $(axes(data)) should be equal original array axes $(axes(A))."))
     cumsum!(data, A; dims=1)
     for i = 2:ndims(A)
         cumsum!(data, data; dims=i)
     end
-    IntegralArray{eltype(data), ndims(data), typeof(data)}(data)
+    IntegralArray{T, ndims(data), typeof(data)}(data)
+end
+
+IntegralArray(A::AbstractArray) = IntegralArray{eltype(A)}(A)
+IntegralArray(data::AbstractArray, A::AbstractArray) = IntegralArray{eltype(data)}(data, A)
+
+let smallints = (Int === Int64 ?
+                Union{Int8, UInt8, Int16, UInt16, Int32, UInt32} :
+                Union{Int8, UInt8, Int16, UInt16})
+    global IntegralArray
+    notsmallint(T::Type{<:Integer}) = T <: Signed ? Int : UInt
+    IntegralArray{T}(A::AbstractArray) where {T <: smallints} =
+        IntegralArray{notsmallint(T)}(A)
+    IntegralArray{T}(data::AbstractArray, A::AbstractArray) where {T <: smallints} =
+        (U = notsmallint(T); IntegralArray{U}(U.(data), A))
 end
 
 Base.IndexStyle(::Type{IntegralArray{T,N,A}}) where {T,N,A} = IndexStyle(A)

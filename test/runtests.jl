@@ -78,6 +78,15 @@ end
         IntegralArray(X, X)
         @test iX == X == IntegralArray(reshape(1:25, 5, 5))
     end
+    
+    @testset "small types" begin
+        X = Int8.(collect(reshape(1:25, 5, 5)))
+        iX = similar(X)
+        iA = IntegralArray(X)
+        @test eltype(iA) == Int
+        IntegralArray(iX, X)
+        @test eltype(iX) == Int
+    end
 end
 
 @testset "Color integral arrays" begin
