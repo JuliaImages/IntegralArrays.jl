@@ -82,10 +82,10 @@ end
     @testset "small types" begin
         X = Int8.(collect(reshape(1:25, 5, 5)))
         iX = similar(X)
-        iA = IntegralArray(X)
-        @test eltype(iA) == Int
-        IntegralArray(iX, X)
-        @test eltype(iX) == Int
+        iAa = IntegralArray(X)
+        iAb = IntegralArray(iX, X)
+        @test eltype(iAa) == Int
+        @test eltype(iAb) == Int
     end
 end
 
