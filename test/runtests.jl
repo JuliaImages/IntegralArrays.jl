@@ -78,6 +78,17 @@ end
         IntegralArray(X, X)
         @test iX == X == IntegralArray(reshape(1:25, 5, 5))
     end
+    
+    @testset "small types" begin
+        # X = collect(reshape(Int8(1):Int8(25), 5, 5))
+        A = rand(Int8, 5, 5)
+        X = similar(A)
+        iA = IntegralArray(A)
+        @test eltype(iA) == Int
+        @test_throws ArgumentError IntegralArray(X, A)
+        @test_throws InexactError IntegralArray{Int8}(A)
+        @test_throws InexactError IntegralArray{Int8}(X, A)
+    end
 end
 
 @testset "Color integral arrays" begin
