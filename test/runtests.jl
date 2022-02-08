@@ -80,12 +80,14 @@ end
     end
     
     @testset "small types" begin
-        X = Int8.(collect(reshape(1:25, 5, 5)))
-        iX = similar(X)
-        iAa = IntegralArray(X)
-        iAb = IntegralArray(iX, X)
-        @test eltype(iAa) == Int
-        @test eltype(iAb) == Int
+        # X = collect(reshape(Int8(1):Int8(25), 5, 5))
+        A = rand(Int8, 5, 5)
+        X = similar(A)
+        iA = IntegralArray(A)
+        @test eltype(iA) == Int
+        @test_throws ArgumentError IntegralArray(X, A)
+        @test_throws InexactError IntegralArray{Int8}(A)
+        @test_throws InexactError IntegralArray{Int8}(X, A)
     end
 end
 

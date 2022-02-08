@@ -104,18 +104,20 @@ function IntegralArray{T}(data::AbstractArray, A::AbstractArray) where {T}
 end
 
 IntegralArray(A::AbstractArray) = IntegralArray{_maybe_floattype(eltype(A))}(A)
-IntegralArray(data::AbstractArray, A::AbstractArray) = IntegralArray{_maybe_floattype(eltype(data))}(data, A)
+IntegralArray(data::AbstractArray, A::AbstractArray) =
+    IntegralArray{_maybe_floattype(eltype(data))}(data, A)
 
-let smallints = (Int === Int64 ?
-                Union{Int8, UInt8, Int16, UInt16, Int32, UInt32} :
-                Union{Int8, UInt8, Int16, UInt16})
-    global IntegralArray
-    notsmallint(T::Type{<:Integer}) = T <: Signed ? Int : UInt
-    IntegralArray(A::AbstractArray{T}) where {T <: smallints} =
-        IntegralArray{_maybe_floattype(notsmallint(T))}(A)
-    IntegralArray(data::AbstractArray{T}, A::AbstractArray) where {T <: smallints} =
-        (U = _maybe_floattype(notsmallint(T)); IntegralArray{U}(U.(data), A))
+# small integer eltypes almost certainly hit overflow issues (#15)
+const SmallInt = @static if Int === Int64
+    Union{Int8, UInt8, Int16, UInt16, Int32, UInt32}
+else
+    Union{Int8, UInt8, Int16, UInt16}
 end
+_widen(::Type{T}) where T<:SmallInt = T <: Signed ? Int : UInt
+IntegralArray(A::AbstractArray{T}) where T<:SmallInt =
+    IntegralArray{_maybe_floattype(_widen(T))}(A)
+IntegralArray(data::AbstractArray{T}, A::AbstractArray) where T<:SmallInt =
+    throw(ArgumentError("Small integer eltype $(T) would cause potential overflow issue, please use more bits for buffer array."))
 
 Base.IndexStyle(::Type{IntegralArray{T,N,A}}) where {T,N,A} = IndexStyle(A)
 Base.size(A::IntegralArray) = size(A.data)
