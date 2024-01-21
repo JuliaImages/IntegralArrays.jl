@@ -39,7 +39,7 @@ When one needs to compute the sum/average of all blocks extracted from an image,
 the integral array usually provides a more efficient computation.
 
 ```julia
-using BenchmarkTools, IntegralArrays
+using BenchmarkTools, IntegralArrays, IntervalSets
 
 # simplified 3x3 mean filter; only for demo purpose
 function mean_filter_naive!(out, X)
